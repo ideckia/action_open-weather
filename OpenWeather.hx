@@ -1,0 +1,153 @@
+package;
+
+import haxe.crypto.Base64;
+import openweather.OpenWeatherApi;
+import openweather.Types.WeatherResponse;
+
+using api.IdeckiaApi;
+
+typedef Props = {
+	@:editable("OpenWeather API key (get it here: https://openweathermap.org/appid)", null)
+	var openWeatherKey:String;
+	@:editable("Update interval in minutes", 15)
+	var updateInterval:UInt;
+	@:editable("Which language do you want the description", 'en', [
+		'af (Afrikaans)', 'al (Albanian)', 'ar (Arabic)', 'az (Azerbaijani)', 'bg (Bulgarian)', 'ca (Catalan)', 'cz (Czech)', 'da (Danish)', 'de (German)',
+		'el (Greek)', 'en (English)', 'eu (Basque)', 'fa (Persian (Farsi))', 'fi (Finnish)', 'fr (French)', 'gl (Galician)', 'he (Hebrew)', 'hi (Hindi)',
+		'hr (Croatian)', 'hu (Hungarian)', 'id (Indonesian)', 'it (Italian)', 'ja (Japanese)', 'kr (Korean)', 'la (Latvian)', 'lt (Lithuanian)',
+		'mk (Macedonian)', 'no (Norwegian)', 'nl (Dutch)', 'pl (Polish)', 'pt (Portuguese)', 'pt_br (Português Brasil)', 'ro (Romanian)', 'ru (Russian)',
+		'sv (Swedish)', 'sk (Slovak)', 'sl (Slovenian)', 'es (Spanish)', 'sr (Serbian)', 'th (Thai)', 'tr (Turkish)', 'uk (Ukrainian)', 'vi (Vietnamese)',
+		'zh_cn (Chinese Simplified)', 'zh_tw (Chinese Traditional)', 'zu (Zulu)'
+	])
+	var language:String;
+	@:editable('Units of measurement', 'metric', ['metric', 'standard', 'imperial'])
+	var units:String;
+	@:editable("OpenWeather town id array (get the IDs from https://openweathermap.org/current#cityid)", [])
+	var townIds:Array<UInt>;
+	@:editable("Towns Locations array (latitude and longitude values).", [])
+	var townLocations:Array<{lat:Float, lon:Float}>;
+	@:editable("Towns names array. City name, state code and country code divided by comma. Please, refer to ISO 3166 for the state codes or country codes.",
+		[])
+	var townNames:Array<String>;
+}
+
+enum TypeOfSearch {
+	id;
+	location;
+	name;
+}
+
+@:name("open-weather")
+@:description("Get weather information from openweathermap.org")
+class OpenWeather extends IdeckiaAction {
+	var state:ItemState;
+	var currentTownIndex:UInt;
+	var typeOfSearch:TypeOfSearch;
+	var tempUnit:String;
+
+	override public function init(initialState:ItemState):js.lib.Promise<ItemState> {
+		var townIdsLength = props.townIds.length;
+		var townLocationsLength = props.townLocations.length;
+		var townNamesLength = props.townNames.length;
+		currentTownIndex = 0;
+
+		switch [townIdsLength, townLocationsLength, townNamesLength] {
+			case [x, 0, 0] if (x > 0):
+				typeOfSearch = id;
+			case [0, x, 0] if (x > 0):
+				typeOfSearch = location;
+			case [0, 0, x] if (x > 0):
+				typeOfSearch = name;
+			case [0, 0, 0]:
+				currentTownIndex = -1;
+				server.dialog.error('Please provide the towns (id, location or name) to search the weater for.');
+			case [x, y, z]:
+				server.log.info('Only one type of search will be accepted.');
+				if (x > 0)
+					typeOfSearch = id;
+				else if (y > 0)
+					typeOfSearch = location;
+				else if (z > 0)
+					typeOfSearch = name;
+		}
+
+		state = initialState;
+
+		if (props.openWeatherKey == null) {
+			currentTownIndex = -1;
+			server.dialog.error('Please provide the OpenWeather APP key (get it here: https://openweathermap.org/appid)');
+		}
+
+		tempUnit = switch props.units {
+			case 'standard': 'K';
+			case 'imperial': 'ºF';
+			default: 'ºC';
+		};
+
+		OpenWeatherApi.apiKey = props.openWeatherKey;
+
+		OpenWeatherApi.lang = StringTools.trim(props.language.split('(')[0]);
+		OpenWeatherApi.units = props.units;
+
+		var timer = new haxe.Timer(props.updateInterval * 60 * 1000);
+		timer.run = function() {
+			getPrediction(state, server.updateClientState, server.log.error);
+		};
+
+		return execute(state);
+	}
+
+	public function execute(currentState:ItemState):js.lib.Promise<ItemState> {
+		return new js.lib.Promise((resolve, reject) -> {
+			if (currentTownIndex == -1)
+				reject('Town id not found');
+
+			getPrediction(currentState, resolve, reject);
+		});
+	}
+
+	override public function onLongPress(currentState:ItemState):js.lib.Promise<ItemState> {
+		return new js.lib.Promise((resolve, reject) -> {
+			if (currentTownIndex == -1)
+				reject('Town id not found');
+
+			var length = switch typeOfSearch {
+				case id: props.townIds.length;
+				case location: props.townLocations.length;
+				case name: props.townNames.length;
+			}
+			currentTownIndex = (currentTownIndex + 1) % length;
+			getPrediction(currentState, resolve, reject);
+		});
+	}
+
+	function getPrediction(currentState:ItemState, resolve:ItemState->Void, reject:Any->Void) {
+		function onResponse(res:WeatherResponse) {
+			var time = DateTools.format(Date.now(), '%H:%M');
+			var temp = Math.round(res.main.temp);
+			currentState.text = '${res.name}\n$time $temp$tempUnit';
+
+			if (res.weather.length > 0) {
+				var icon = res.weather[0].icon;
+				OpenWeatherApi.getIcon(icon).then(ic -> {
+					currentState.icon = Base64.encode(ic);
+					resolve(currentState);
+				}).catchError((e) -> {
+					server.log.error('Error fetching $icon icon.');
+					resolve(currentState);
+				});
+			} else {
+				resolve(currentState);
+			}
+		}
+
+		switch typeOfSearch {
+			case id:
+				OpenWeatherApi.getWeatherById(props.townIds[currentTownIndex]).then(onResponse).catchError(reject);
+			case location:
+				OpenWeatherApi.getWeatherByLocation(props.townLocations[currentTownIndex]).then(onResponse).catchError(reject);
+			case name:
+				OpenWeatherApi.getWeatherByName(props.townNames[currentTownIndex]).then(onResponse).catchError(reject);
+		}
+	}
+}
