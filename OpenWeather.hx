@@ -125,8 +125,8 @@ class OpenWeather extends IdeckiaAction {
 		function onResponse(res:WeatherResponse) {
 			var time = DateTools.format(Date.now(), '%H:%M');
 			var temp = Math.round(res.main.temp);
-			var tempText = new RichText(temp + tempUnit).size(currentState.textSize * 2).bold();
-			currentState.text = '${new RichText(res.name).underline()}\n$time $tempText';
+			var tempText = new RichString(temp + tempUnit).size(currentState.textSize * 2).bold();
+			currentState.text = '${new RichString(res.name).underline()}\n$time $tempText';
 
 			if (res.weather.length > 0) {
 				var icon = res.weather[0].icon;
