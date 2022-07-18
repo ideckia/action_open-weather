@@ -12,12 +12,52 @@ typedef Props = {
 	@:editable("Update interval in minutes", 15)
 	var updateInterval:UInt;
 	@:editable("Which language do you want the description", 'en', [
-		'af (Afrikaans)', 'al (Albanian)', 'ar (Arabic)', 'az (Azerbaijani)', 'bg (Bulgarian)', 'ca (Catalan)', 'cz (Czech)', 'da (Danish)', 'de (German)',
-		'el (Greek)', 'en (English)', 'eu (Basque)', 'fa (Persian (Farsi))', 'fi (Finnish)', 'fr (French)', 'gl (Galician)', 'he (Hebrew)', 'hi (Hindi)',
-		'hr (Croatian)', 'hu (Hungarian)', 'id (Indonesian)', 'it (Italian)', 'ja (Japanese)', 'kr (Korean)', 'la (Latvian)', 'lt (Lithuanian)',
-		'mk (Macedonian)', 'no (Norwegian)', 'nl (Dutch)', 'pl (Polish)', 'pt (Portuguese)', 'pt_br (Português Brasil)', 'ro (Romanian)', 'ru (Russian)',
-		'sv (Swedish)', 'sk (Slovak)', 'sl (Slovenian)', 'es (Spanish)', 'sr (Serbian)', 'th (Thai)', 'tr (Turkish)', 'uk (Ukrainian)', 'vi (Vietnamese)',
-		'zh_cn (Chinese Simplified)', 'zh_tw (Chinese Traditional)', 'zu (Zulu)'
+		'af (Afrikaans)',
+		'al (Albanian)',
+		'ar (Arabic)',
+		'az (Azerbaijani)',
+		'bg (Bulgarian)',
+		'ca (Catalan)',
+		'cz (Czech)',
+		'da (Danish)',
+		'de (German)',
+		'el (Greek)',
+		'en (English)',
+		'eu (Basque)',
+		'fa (Persian (Farsi))',
+		'fi (Finnish)',
+		'fr (French)',
+		'gl (Galician)',
+		'he (Hebrew)',
+		'hi (Hindi)',
+		'hr (Croatian)',
+		'hu (Hungarian)',
+		'id (Indonesian)',
+		'it (Italian)',
+		'ja (Japanese)',
+		'kr (Korean)',
+		'la (Latvian)',
+		'lt (Lithuanian)',
+		'mk (Macedonian)',
+		'no (Norwegian)',
+		'nl (Dutch)',
+		'pl (Polish)',
+		'pt (Portuguese)',
+		'pt_br (Português Brasil)',
+		'ro (Romanian)',
+		'ru (Russian)',
+		'sv (Swedish)',
+		'sk (Slovak)',
+		'sl (Slovenian)',
+		'es (Spanish)',
+		'sr (Serbian)',
+		'th (Thai)',
+		'tr (Turkish)',
+		'uk (Ukrainian)',
+		'vi (Vietnamese)',
+		'zh_cn (Chinese Simplified)',
+		'zh_tw (Chinese Traditional)',
+		'zu (Zulu)'
 	])
 	var language:String;
 	@:editable('Units of measurement', 'metric', ['metric', 'standard', 'imperial'])
@@ -60,7 +100,7 @@ class OpenWeather extends IdeckiaAction {
 				typeOfSearch = name;
 			case [0, 0, 0]:
 				currentTownIndex = -1;
-				server.dialog.error('Please provide the towns (id, location or name) to search the weater for.');
+				server.dialog.error('OpenWeather error', 'Please provide the towns (id, location or name) to search the weater for.');
 			case [x, y, z]:
 				server.log.info('Only one type of search will be accepted.');
 				if (x > 0)
@@ -75,7 +115,7 @@ class OpenWeather extends IdeckiaAction {
 
 		if (props.openWeatherKey == null) {
 			currentTownIndex = -1;
-			server.dialog.error('Please provide the OpenWeather APP key (get it here: https://openweathermap.org/appid)');
+			server.dialog.error('OpenWeather error', 'Please provide the OpenWeather APP key (get it here: https://openweathermap.org/appid)');
 		}
 
 		tempUnit = switch props.units {
