@@ -8,9 +8,9 @@ using api.IdeckiaApi;
 
 typedef Props = {
 	@:editable("OpenWeather API key (get it here: https://openweathermap.org/appid)", null)
-	var openWeatherKey:String;
+	var open_weather_key:String;
 	@:editable("Update interval in minutes", 15)
-	var updateInterval:UInt;
+	var update_interval:UInt;
 	@:editable("Which language do you want the description", 'en', [
 		'af (Afrikaans)',
 		'al (Albanian)',
@@ -63,12 +63,12 @@ typedef Props = {
 	@:editable('Units of measurement', 'metric', ['metric', 'standard', 'imperial'])
 	var units:String;
 	@:editable("OpenWeather town id array (get the IDs from https://openweathermap.org/current#cityid)", [])
-	var townIds:Array<UInt>;
+	var town_ids:Array<UInt>;
 	@:editable("Towns Locations array (latitude and longitude values).", [])
-	var townLocations:Array<{lat:Float, lon:Float}>;
+	var town_locations:Array<{lat:Float, lon:Float}>;
 	@:editable("Towns names array. City name, state code and country code divided by comma. Please, refer to ISO 3166 for the state codes or country codes.",
 		[])
-	var townNames:Array<String>;
+	var town_names:Array<String>;
 }
 
 enum TypeOfSearch {
@@ -86,9 +86,9 @@ class OpenWeather extends IdeckiaAction {
 	var tempUnit:String;
 
 	override public function init(initialState:ItemState):js.lib.Promise<ItemState> {
-		var townIdsLength = props.townIds.length;
-		var townLocationsLength = props.townLocations.length;
-		var townNamesLength = props.townNames.length;
+		var townIdsLength = props.town_ids.length;
+		var townLocationsLength = props.town_locations.length;
+		var townNamesLength = props.town_names.length;
 		currentTownIndex = 0;
 
 		switch [townIdsLength, townLocationsLength, townNamesLength] {
@@ -113,7 +113,7 @@ class OpenWeather extends IdeckiaAction {
 
 		state = initialState;
 
-		if (props.openWeatherKey == null) {
+		if (props.open_weather_key == null) {
 			currentTownIndex = -1;
 			server.dialog.error('OpenWeather error', 'Please provide the OpenWeather APP key (get it here: https://openweathermap.org/appid)');
 		}
@@ -124,12 +124,12 @@ class OpenWeather extends IdeckiaAction {
 			default: 'ºC';
 		};
 
-		OpenWeatherApi.apiKey = props.openWeatherKey;
+		OpenWeatherApi.apiKey = props.open_weather_key;
 
 		OpenWeatherApi.lang = StringTools.trim(props.language.split('(')[0]);
 		OpenWeatherApi.units = props.units;
 
-		var timer = new haxe.Timer(props.updateInterval * 60 * 1000);
+		var timer = new haxe.Timer(props.update_interval * 60 * 1000);
 		timer.run = function() {
 			getPrediction(state, server.updateClientState, server.log.error);
 		};
@@ -152,9 +152,9 @@ class OpenWeather extends IdeckiaAction {
 				reject('Town id not found');
 
 			var length = switch typeOfSearch {
-				case id: props.townIds.length;
-				case location: props.townLocations.length;
-				case name: props.townNames.length;
+				case id: props.town_ids.length;
+				case location: props.town_locations.length;
+				case name: props.town_names.length;
 			}
 			currentTownIndex = (currentTownIndex + 1) % length;
 			getPrediction(currentState, resolve, reject);
@@ -184,11 +184,11 @@ class OpenWeather extends IdeckiaAction {
 
 		switch typeOfSearch {
 			case id:
-				OpenWeatherApi.getWeatherById(props.townIds[currentTownIndex]).then(onResponse).catchError(reject);
+				OpenWeatherApi.getWeatherById(props.town_ids[currentTownIndex]).then(onResponse).catchError(reject);
 			case location:
-				OpenWeatherApi.getWeatherByLocation(props.townLocations[currentTownIndex]).then(onResponse).catchError(reject);
+				OpenWeatherApi.getWeatherByLocation(props.town_locations[currentTownIndex]).then(onResponse).catchError(reject);
 			case name:
-				OpenWeatherApi.getWeatherByName(props.townNames[currentTownIndex]).then(onResponse).catchError(reject);
+				OpenWeatherApi.getWeatherByName(props.town_names[currentTownIndex]).then(onResponse).catchError(reject);
 		}
 	}
 }
