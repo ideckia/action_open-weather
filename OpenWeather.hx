@@ -84,6 +84,7 @@ class OpenWeather extends IdeckiaAction {
 	var currentTownIndex:UInt;
 	var typeOfSearch:TypeOfSearch;
 	var tempUnit:String;
+	var updateTimer:haxe.Timer;
 
 	override public function init(initialState:ItemState):js.lib.Promise<ItemState> {
 		var townIdsLength = props.town_ids.length;
@@ -129,24 +130,38 @@ class OpenWeather extends IdeckiaAction {
 		OpenWeatherApi.lang = StringTools.trim(props.language.split('(')[0]);
 		OpenWeatherApi.units = props.units;
 
-		var timer = new haxe.Timer(props.update_interval * 60 * 1000);
-		timer.run = function() {
-			getPrediction(state, server.updateClientState, server.log.error);
-		};
-
-		return execute(state);
+		return show(initialState);
 	}
 
-	public function execute(currentState:ItemState):js.lib.Promise<ItemState> {
+	override public function show(currentState:ItemState):js.lib.Promise<ItemState> {
 		return new js.lib.Promise((resolve, reject) -> {
-			if (currentTownIndex == -1)
-				reject('Town id not found');
-
+			if (updateTimer == null) {
+				updateTimer = new haxe.Timer(props.update_interval * 60 * 1000);
+				updateTimer.run = function() {
+					getPrediction(state, server.updateClientState, server.log.error);
+				};
+			}
 			getPrediction(currentState, resolve, reject);
 		});
 	}
 
-	override public function onLongPress(currentState:ItemState):js.lib.Promise<ItemState> {
+	override public function hide() {
+		if (updateTimer != null) {
+			updateTimer.stop();
+			updateTimer = null;
+		}
+	}
+
+	public function execute(currentState:ItemState):js.lib.Promise<ActionOutcome> {
+		return new js.lib.Promise((resolve, reject) -> {
+			if (currentTownIndex == -1)
+				reject('Town id not found');
+
+			getPrediction(currentState, (newState) -> resolve(new ActionOutcome({state: newState})), reject);
+		});
+	}
+
+	override public function onLongPress(currentState:ItemState):js.lib.Promise<ActionOutcome> {
 		return new js.lib.Promise((resolve, reject) -> {
 			if (currentTownIndex == -1)
 				reject('Town id not found');
@@ -157,7 +172,7 @@ class OpenWeather extends IdeckiaAction {
 				case name: props.town_names.length;
 			}
 			currentTownIndex = (currentTownIndex + 1) % length;
-			getPrediction(currentState, resolve, reject);
+			getPrediction(currentState, (newState) -> resolve(new ActionOutcome({state: newState})), reject);
 		});
 	}
 
