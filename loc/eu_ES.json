@@ -1,0 +1,46 @@
+[
+	{
+		"id": "action_description",
+		"text": "Eguraldiaren informazioa lortu openweathermap.org webgunetik"
+	},
+	{
+		"id": "prop_open_weather_key",
+		"text": "OpenWeather API giltza (lortu hemen: https://openweathermap.org/appid)"
+	},
+	{
+		"id": "prop_update_interval",
+		"text": "Eguneraketa maiztasuna minututan"
+	},
+	{
+		"id": "prop_language",
+		"text": "Zein hizkuntzatan nahi duzu deskribapena"
+	},
+	{
+		"id": "prop_units",
+		"text": "Neurketa unitateak"
+	},
+	{
+		"id": "prop_town_ids",
+		"text": "OpenWeather herri IDak (lortu IDak hemen https://openweathermap.org/current#cityid)"
+	},
+	{
+		"id": "prop_town_locations",
+		"text": "Herrien kokalekuak (latitude eta longitude balioak)."
+	},
+	{
+		"id": "prop_town_names",
+		"text": "Herrien izenak. Herriaren izen, estatu eta herrialdea koma bidez banatuak. Mesedez, estatu edo herrialde kodeak ISO 3166 izan behar dute."
+	},
+	{
+		"id": "error_no_prop_provided_body",
+		"text": "Mesedez eman herriak (ID, kokalekua edo izena) eguraldia bilatzeko."
+	},
+	{
+		"id": "error_no_openweather_key_provided_body",
+		"text": "Mesedez eman OpenWeather API giltza (lortu hemen: https://openweathermap.org/appid)."
+	},
+	{
+		"id": "error_town_id_not_found",
+		"text": "Herri IDa ez da aurkitu."
+	}
+]

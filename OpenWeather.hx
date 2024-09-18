@@ -7,11 +7,11 @@ import openweather.Types.WeatherResponse;
 using api.IdeckiaApi;
 
 typedef Props = {
-	@:editable("OpenWeather API key (get it here: https://openweathermap.org/appid)", null)
+	@:editable("prop_open_weather_key", null)
 	var open_weather_key:String;
-	@:editable("Update interval in minutes", 15)
+	@:editable("prop_update_interval", 15)
 	var update_interval:UInt;
-	@:editable("Which language do you want the description", 'en', [
+	@:editable("prop_language", 'en', [
 		'af (Afrikaans)',
 		'al (Albanian)',
 		'ar (Arabic)',
@@ -60,14 +60,13 @@ typedef Props = {
 		'zu (Zulu)'
 	])
 	var language:String;
-	@:editable('Units of measurement', 'metric', ['metric', 'standard', 'imperial'])
+	@:editable('prop_units', 'metric', ['metric', 'standard', 'imperial'])
 	var units:String;
-	@:editable("OpenWeather town id array (get the IDs from https://openweathermap.org/current#cityid)", [])
+	@:editable("prop_town_ids", [])
 	var town_ids:Array<UInt>;
-	@:editable("Towns Locations array (latitude and longitude values).", [])
+	@:editable("prop_town_locations", [])
 	var town_locations:Array<{lat:Float, lon:Float}>;
-	@:editable("Towns names array. City name, state code and country code divided by comma. Please, refer to ISO 3166 for the state codes or country codes.",
-		[])
+	@:editable("prop_town_names", [])
 	var town_names:Array<String>;
 }
 
@@ -78,7 +77,8 @@ enum TypeOfSearch {
 }
 
 @:name("open-weather")
-@:description("Get weather information from openweathermap.org")
+@:description("action_description")
+@:localize
 class OpenWeather extends IdeckiaAction {
 	var state:ItemState;
 	var currentTownIndex:UInt;
@@ -101,9 +101,9 @@ class OpenWeather extends IdeckiaAction {
 				typeOfSearch = name;
 			case [0, 0, 0]:
 				currentTownIndex = -1;
-				server.dialog.error('OpenWeather error', 'Please provide the towns (id, location or name) to search the weater for.');
+				core.dialog.error('OpenWeather error', Loc.error_no_prop_provided_body.tr());
 			case [x, y, z]:
-				server.log.info('Only one type of search will be accepted.');
+				core.log.info('Only one type of search will be accepted.');
 				if (x > 0)
 					typeOfSearch = id;
 				else if (y > 0)
@@ -116,7 +116,7 @@ class OpenWeather extends IdeckiaAction {
 
 		if (props.open_weather_key == null) {
 			currentTownIndex = -1;
-			server.dialog.error('OpenWeather error', 'Please provide the OpenWeather APP key (get it here: https://openweathermap.org/appid)');
+			core.dialog.error('OpenWeather error', Loc.error_no_openweather_key_provided_body.tr());
 		}
 
 		tempUnit = switch props.units {
@@ -138,7 +138,7 @@ class OpenWeather extends IdeckiaAction {
 			if (updateTimer == null) {
 				updateTimer = new haxe.Timer(props.update_interval * 60 * 1000);
 				updateTimer.run = function() {
-					getPrediction(state, server.updateClientState, server.log.error);
+					getPrediction(state, core.updateClientState, core.log.error);
 				};
 			}
 			getPrediction(currentState, resolve, reject);
@@ -155,7 +155,7 @@ class OpenWeather extends IdeckiaAction {
 	public function execute(currentState:ItemState):js.lib.Promise<ActionOutcome> {
 		return new js.lib.Promise((resolve, reject) -> {
 			if (currentTownIndex == -1)
-				reject('Town id not found');
+				reject(Loc.error_town_id_not_found.tr());
 
 			getPrediction(currentState, (newState) -> resolve(new ActionOutcome({state: newState})), reject);
 		});
@@ -164,7 +164,7 @@ class OpenWeather extends IdeckiaAction {
 	override public function onLongPress(currentState:ItemState):js.lib.Promise<ActionOutcome> {
 		return new js.lib.Promise((resolve, reject) -> {
 			if (currentTownIndex == -1)
-				reject('Town id not found');
+				reject(Loc.error_town_id_not_found.tr());
 
 			var length = switch typeOfSearch {
 				case id: props.town_ids.length;
@@ -189,7 +189,7 @@ class OpenWeather extends IdeckiaAction {
 					currentState.icon = Base64.encode(ic);
 					resolve(currentState);
 				}).catchError((e) -> {
-					server.log.error('Error fetching $icon icon.');
+					core.log.error('Error fetching $icon icon.');
 					resolve(currentState);
 				});
 			} else {

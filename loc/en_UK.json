@@ -1,0 +1,46 @@
+[
+	{
+		"id": "action_description",
+		"text": "Get weather information from openweathermap.org"
+	},
+	{
+		"id": "prop_open_weather_key",
+		"text": "OpenWeather API key (get it here: https://openweathermap.org/appid)"
+	},
+	{
+		"id": "prop_update_interval",
+		"text": "Update interval in minutes"
+	},
+	{
+		"id": "prop_language",
+		"text": "Which language do you want the description"
+	},
+	{
+		"id": "prop_units",
+		"text": "Units of measurement"
+	},
+	{
+		"id": "prop_town_ids",
+		"text": "OpenWeather town ID array (get the IDs from https://openweathermap.org/current#cityid)"
+	},
+	{
+		"id": "prop_town_locations",
+		"text": "Towns Locations array (latitude and longitude values)."
+	},
+	{
+		"id": "prop_town_names",
+		"text": "Towns names array. City name, state code and country code divided by comma. Please, refer to ISO 3166 for the state codes or country codes."
+	},
+	{
+		"id": "error_no_prop_provided_body",
+		"text": "Please provide the towns (ID, location or name) to search the weater for."
+	},
+	{
+		"id": "error_no_openweather_key_provided_body",
+		"text": "Please provide the OpenWeather APP key (get it here: https://openweathermap.org/appid)."
+	},
+	{
+		"id": "error_town_id_not_found",
+		"text": "Town ID not found."
+	}
+]
