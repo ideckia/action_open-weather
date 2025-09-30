@@ -145,6 +145,10 @@ class OpenWeather extends IdeckiaAction {
 		});
 	}
 
+	override function deinit() {
+		hide();
+	}
+
 	override public function hide() {
 		if (updateTimer != null) {
 			updateTimer.stop();
